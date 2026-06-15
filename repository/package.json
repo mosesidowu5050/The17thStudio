@@ -1,0 +1,9 @@
+{
+  "name": "@app/repository",
+  "version": "1.0.0",
+  "description": "Repository layer for database operations",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

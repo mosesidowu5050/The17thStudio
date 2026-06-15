@@ -17,6 +17,13 @@ function appError(errorMessage, errorCode = 'ERR', options = {}) {
     error.details = options.details;
   }
 
+  // Support surfacing a short business-rule code (e.g. 'SL02') in the response
+  // Accept either options.businessCode or options.code (both supported)
+  const bCode = options.businessCode || options.code;
+  if (bCode) {
+    error.businessCode = bCode;
+  }
+
   throw error;
 }
 
