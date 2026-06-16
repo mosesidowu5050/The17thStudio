@@ -81,6 +81,17 @@ function isValidSlug(slug) {
 }
 
 /**
+ * Appends a hyphen + suffix to a base slug.
+ * If base is empty, returns suffix alone.
+ */
+function appendSuffix(base, suffix) {
+  const parts = [];
+  if (base.length > 0) parts.push(base);
+  parts.push(suffix);
+  return parts.join('-');
+}
+
+/**
  * Derives a slug from a title:
  *   1. Lowercase
  *   2. Replace runs of whitespace with a single hyphen
@@ -160,8 +171,14 @@ function serializeCard(doc, opts = {}) {
 async function createCreatorCard(serviceData) {
   let response;
 
+  // Normalize: treat empty or whitespace-only slug as omitted so auto-generation kicks in
+  const normalizedInput = Object.assign({}, serviceData);
+  if (typeof normalizedInput.slug === 'string' && normalizedInput.slug.trim().length === 0) {
+    delete normalizedInput.slug;
+  }
+
   // Step 1 — Field-level validation via VSL (types, lengths, enums)
-  const data = validator.validate(serviceData, parsedSpec);
+  const data = validator.validate(normalizedInput, parsedSpec);
 
   // Step 2 — Validate links[].url must start with http:// or https://
   if (data.links && data.links.length > 0) {
@@ -258,11 +275,7 @@ async function createCreatorCard(serviceData) {
     if (candidate.length < 5) {
       // Too short - append a random 6-char suffix immediately
       const suffix = randomBytes(6);
-      if (candidate.length > 0) {
-        candidate = [candidate, suffix].join('-');
-      } else {
-        candidate = suffix;
-      }
+      candidate = appendSuffix(candidate, suffix);
     } else {
       // Long enough - only append suffix if already taken
       const existing = await creatorCardRepository.findOne({
@@ -270,7 +283,7 @@ async function createCreatorCard(serviceData) {
       });
       if (existing) {
         const suffix = randomBytes(6);
-        candidate = [candidate, suffix].join('-');
+        candidate = appendSuffix(candidate, suffix);
       }
     }
 
